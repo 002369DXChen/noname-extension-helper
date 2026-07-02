@@ -1,0 +1,174 @@
+{
+  "name": "noname-extension-helper",
+  "displayName": "无名杀扩展助手",
+  "description": "在 VS Code 中管理无名杀 ES Module 扩展的武将、技能和卡牌",
+  "version": "0.1.0",
+  "publisher": "002369DXChen",
+  "license": "GPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/002369DXChen/noname-extension-helper.git"
+  },
+  "bugs": {
+    "url": "https://github.com/002369DXChen/noname-extension-helper/issues"
+  },
+  "homepage": "https://github.com/002369DXChen/noname-extension-helper#readme",
+  "keywords": ["noname", "无名杀", "三国杀", "extension", "武将", "技能", "卡牌"],
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onView:nonameExtensions",
+    "workspaceContains:extension/*/extension.js",
+    "workspaceContains:extension/*/main/precontent.js",
+    "onCommand:nonameExtensionHelper.refresh"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "views": {
+      "explorer": [
+        {
+          "id": "nonameExtensions",
+          "name": "无名杀扩展",
+          "when": "workspaceFolderCount >= 1"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "nonameExtensionHelper.refresh",
+        "title": "刷新扩展列表",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "nonameExtensionHelper.openFileAt",
+        "title": "打开文件"
+      },
+      {
+        "command": "nonameExtensionHelper.openExtensionFolder",
+        "title": "打开扩展目录"
+      },
+      {
+        "command": "nonameExtensionHelper.exportExtension",
+        "title": "导出扩展"
+      },
+      {
+        "command": "nonameExtensionHelper.createCharacter",
+        "title": "新建武将（命令行）"
+      },
+      {
+        "command": "nonameExtensionHelper.createExtension",
+        "title": "新建扩展"
+      },
+      {
+        "command": "nonameExtensionHelper.createCharacterForm",
+        "title": "新建武将（表单）"
+      },
+      {
+        "command": "nonameExtensionHelper.createSkill",
+        "title": "新建技能"
+      },
+      {
+        "command": "nonameExtensionHelper.createSkillForCharacter",
+        "title": "为该武将创建技能"
+      },
+      {
+        "command": "nonameExtensionHelper.editItem",
+        "title": "编辑对象（代码）"
+      },
+      {
+        "command": "nonameExtensionHelper.editCharacterForm",
+        "title": "编辑武将（表单）"
+      },
+      {
+        "command": "nonameExtensionHelper.deleteSkill",
+        "title": "删除技能"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "nonameExtensionHelper.refresh",
+          "when": "view == nonameExtensions",
+          "group": "navigation"
+        },
+        {
+          "command": "nonameExtensionHelper.createExtension",
+          "when": "view == nonameExtensions",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "nonameExtensionHelper.createCharacterForm",
+          "when": "view == nonameExtensions && viewItem == nonameExtension",
+          "group": "1_modification"
+        },
+        {
+          "command": "nonameExtensionHelper.createCharacter",
+          "when": "view == nonameExtensions && viewItem == nonameExtension",
+          "group": "1_modification"
+        },
+        {
+          "command": "nonameExtensionHelper.createSkill",
+          "when": "view == nonameExtensions && viewItem == nonameExtension",
+          "group": "1_modification"
+        },
+        {
+          "command": "nonameExtensionHelper.createSkillForCharacter",
+          "when": "view == nonameExtensions && viewItem == nonameCharacter",
+          "group": "1_modification"
+        },
+        {
+          "command": "nonameExtensionHelper.editCharacterForm",
+          "when": "view == nonameExtensions && viewItem == nonameCharacter",
+          "group": "2_edit"
+        },
+        {
+          "command": "nonameExtensionHelper.editItem",
+          "when": "view == nonameExtensions && (viewItem == nonameCharacter || viewItem == nonameSkill || viewItem == nonameCard)",
+          "group": "2_edit"
+        },
+        {
+          "command": "nonameExtensionHelper.deleteSkill",
+          "when": "view == nonameExtensions && viewItem == nonameSkill",
+          "group": "3_delete"
+        },
+        {
+          "command": "nonameExtensionHelper.exportExtension",
+          "when": "view == nonameExtensions && viewItem == nonameExtension",
+          "group": "4_export"
+        }
+      ]
+    },
+    "snippets": [
+      {
+        "language": "javascript",
+        "path": "./snippets/snippets.json"
+      }
+    ],
+    "configuration": {
+      "title": "无名杀扩展助手",
+      "properties": {
+        "nonameExtensionHelper.extensionDir": {
+          "type": "string",
+          "default": "extension",
+          "description": "扩展目录名，相对于工作区根目录"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@babel/parser": "^7.24.0"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.74.0",
+    "@types/node": "^20.0.0"
+  }
+}

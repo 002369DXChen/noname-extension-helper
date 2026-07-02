@@ -1,0 +1,53 @@
+{
+    "无名杀武将模板": {
+        "prefix": "noname-char",
+        "description": "生成一个标准 ES Module 武将对象",
+        "body": [
+            "${1:my_id}: {",
+            "    sex: \"${2|male,female,double|}\",",
+            "    group: \"${3|wei,shu,wu,qun,jin,western,key,shen|}\",",
+            "    hp: ${4:4},",
+            "    skills: [${5:\"${6:my_skill}\"}],",
+            "},"
+        ]
+    },
+    "无名杀技能模板": {
+        "prefix": "noname-skill",
+        "description": "生成一个标准 ES Module 异步技能对象",
+        "body": [
+            "${1:my_skill}: {",
+            "    audio: ${2:2},",
+            "    trigger: {",
+            "        player: \"${3:phaseZhunbeiBegin}\",",
+            "    },",
+            "    async content(event, trigger, player) {",
+            "        ${4:// await player.draw();}",
+            "    },",
+            "},"
+        ]
+    },
+    "无名杀锁定技模板": {
+        "prefix": "noname-skill-locked",
+        "description": "生成一个标准锁定技",
+        "body": [
+            "${1:my_skill}: {",
+            "    audio: ${2:2},",
+            "    locked: true,",
+            "    trigger: {",
+            "        player: \"${3:phaseZhunbeiBegin}\",",
+            "    },",
+            "    async content(event, trigger, player) {",
+            "        ${4:// await player.draw();}",
+            "    },",
+            "},"
+        ]
+    },
+    "无名杀翻译条目": {
+        "prefix": "noname-translate",
+        "description": "生成一条武将/技能翻译",
+        "body": [
+            "${1:my_id}: \"${2:名称}\",",
+            "${1}_info: \"${3:描述}\","
+        ]
+    }
+}

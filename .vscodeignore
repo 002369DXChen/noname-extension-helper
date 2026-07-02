@@ -1,0 +1,10 @@
+.vscode/**
+.vscode-test/**
+.github/**
+scripts/**
+test-plugin.js
+test-desktop.js
+*.vsix
+node_modules/*
+!node_modules/@babel/**
+node_modules/@babel/parser/node_modules/**

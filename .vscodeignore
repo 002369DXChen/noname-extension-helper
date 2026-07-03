@@ -4,6 +4,7 @@
 scripts/**
 test-plugin.js
 test-desktop.js
+.gitignore
 *.vsix
 node_modules/*
 !node_modules/@babel/**

@@ -79,6 +79,32 @@ class NonameTreeDataProvider {
             return [];
         }
 
+        if (element instanceof CharacterNode) {
+            const char = element.character;
+            const ext = char.extension;
+
+            if (!char.skills || char.skills.length === 0) {
+                return [new InfoNode("暂无技能")];
+            }
+
+            let parsed = this._parsedCache.get(ext.dirName);
+            if (!parsed) {
+                parsed = await parseExtension(ext);
+                this._parsedCache.set(ext.dirName, parsed);
+            }
+
+            const skillMap = new Map(parsed.skills.map(skill => [skill.id, skill]));
+            const charSkills = char.skills
+                .map(id => skillMap.get(id))
+                .filter(Boolean);
+
+            if (charSkills.length === 0) {
+                return [new InfoNode("未找到技能定义")];
+            }
+
+            return charSkills.map(skill => new SkillNode(skill));
+        }
+
         return [];
     }
 }

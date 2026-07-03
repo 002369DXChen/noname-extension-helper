@@ -45,8 +45,9 @@ async function parseCharacterDir(characterDir, extension) {
         skills: [],
     };
 
-    // 收集所有翻译
+    // 收集所有翻译和称号
     const translates = {};
+    const titles = {};
 
     // 解析根目录
     const rootFiles = getModuleFiles(characterDir, "character");
@@ -58,6 +59,10 @@ async function parseCharacterDir(characterDir, extension) {
     }
     if (rootFiles.translate) {
         Object.assign(translates, await parseTranslateFile(rootFiles.translate));
+    }
+    const rootTitleFile = path.join(characterDir, "title.js");
+    if (fs.existsSync(rootTitleFile)) {
+        Object.assign(titles, await parseTranslateFile(rootTitleFile));
     }
 
     // 解析子目录
@@ -73,12 +78,17 @@ async function parseCharacterDir(characterDir, extension) {
         if (subFiles.translate) {
             Object.assign(translates, await parseTranslateFile(subFiles.translate));
         }
+        const subTitleFile = path.join(subDir, "title.js");
+        if (fs.existsSync(subTitleFile)) {
+            Object.assign(titles, await parseTranslateFile(subTitleFile));
+        }
     }
 
-    // 应用翻译
+    // 应用翻译和称号
     for (const char of result.characters) {
         char.displayName = translates[char.id] || char.displayName;
         char.description = translates[char.id + "_info"] || char.description;
+        char.title = titles[char.id] || "";
     }
     for (const skill of result.skills) {
         skill.displayName = translates[skill.id] || skill.displayName;

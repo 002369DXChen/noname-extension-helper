@@ -144,6 +144,11 @@ async function createCharacterFromForm(extension, data) {
 
     // 确保 index.js 存在
     await ensureIndexJs(characterDir);
+
+    // 写入称号
+    if (data.title) {
+        await updateTitleEntry(characterDir, id, data.title);
+    }
 }
 
 async function editCharacterFromForm(character, data) {
@@ -195,6 +200,9 @@ async function editCharacterFromForm(character, data) {
     const success = await vscode.workspace.applyEdit(edit);
     if (!success) throw new Error("替换武将对象失败");
     await doc.save();
+
+    // 更新称号
+    await updateTitleEntry(characterDir, id, data.title);
 
     // 更新 translate.js
     await updateTranslateEntry(characterDir, id, data.displayName, data.description);
@@ -316,11 +324,81 @@ async function appendObjectEntry(filePath, entry, defaultContent) {
 
 async function ensureIndexJs(characterDir) {
     const indexFile = path.join(characterDir, "index.js");
-    if (fs.existsSync(indexFile)) return;
+    if (!fs.existsSync(indexFile)) {
+        const content = `import character from "./character.js";
+import skill from "./skill.js";
+import translate from "./translate.js";
+import characterTitle from "./title.js";
 
-    const content = `import character from "./character.js";\nimport skill from "./skill.js";\nimport translate from "./translate.js";\n\nexport default function () {\n    return {\n        character,\n        skill,\n        translate,\n    };\n}\n`;
-    await fs.promises.writeFile(indexFile, content, "utf8");
+export default function () {
+    return {
+        character,
+        characterTitle,
+        skill,
+        translate,
+    };
 }
+`;
+        await fs.promises.writeFile(indexFile, content, "utf8");
+        return;
+    }
+
+    // 如果 index.js 已存在但没有导入 title.js，则补全
+    const content = await fs.promises.readFile(indexFile, "utf8");
+    if (content.includes("characterTitle") || content.includes("title.js")) return;
+
+    let newContent = content;
+    if (!newContent.includes('import characterTitle from "./title.js"')) {
+        newContent = newContent.replace(
+            /import translate from "\.\/translate\.js";?\n/,
+            'import translate from "./translate.js";\nimport characterTitle from "./title.js";\n'
+        );
+    }
+    if (!newContent.includes("characterTitle,")) {
+        newContent = newContent.replace(
+            /character:\s*\{[^}]*\},?\n/,
+            match => match + "        characterTitle: { ...characterTitle },\n"
+        );
+    }
+    if (newContent !== content) {
+        await fs.promises.writeFile(indexFile, newContent, "utf8");
+    }
+}
+async function updateTitleEntry(characterDir, id, title) {
+    await ensureIndexJs(characterDir);
+    const titleFile = path.join(characterDir, "title.js");
+    if (!fs.existsSync(titleFile)) {
+        await fs.promises.writeFile(
+            titleFile,
+            `const characterTitle = {
+};
+
+export default characterTitle;
+`,
+            "utf8"
+        );
+    }
+
+    const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(titleFile));
+    const text = doc.getText();
+
+    const titleRegex = new RegExp(`\s*${escapeRegex(id)}\s*:\s*["\`].*?["\`],?\n`, "g");
+    const titleEntry = `    ${id}: "${title || ""}",
+`;
+
+    let newText;
+    if (titleRegex.test(text)) {
+        newText = text.replace(titleRegex, titleEntry);
+    } else {
+        newText = appendBeforeLastBrace(text, titleEntry);
+    }
+
+    const edit = new vscode.WorkspaceEdit();
+    edit.replace(doc.uri, new vscode.Range(doc.positionAt(0), doc.positionAt(text.length)), newText);
+    await vscode.workspace.applyEdit(edit);
+    await doc.save();
+}
+
 
 /**
  * 找到对象属性的完整范围（从 key 开始到后面的逗号/换行）
@@ -406,6 +484,7 @@ function getFormHtml(extension, skills, character) {
     const sexValue = isEdit ? (character.sex || "male") : "male";
     const groupValue = isEdit ? (character.group || "qun") : "qun";
     const descriptionValue = isEdit ? (character.description || "") : "";
+    const titleValue = isEdit ? (character.title || "") : "";
     const selectedSkills = isEdit ? (character.skills || []) : [];
     const isZhugong = isEdit && character.isZhugong ? "checked" : "";
     const isBoss = isEdit && character.isBoss ? "checked" : "";
@@ -427,6 +506,7 @@ function getFormHtml(extension, skills, character) {
         id: character.id,
         displayName: character.displayName,
         description: character.description || "",
+        title: character.title || "",
         hp: hpValue,
         sex: sexValue,
         group: groupValue,
@@ -546,6 +626,11 @@ function getFormHtml(extension, skills, character) {
         <select id="skills" multiple>${skillOptions}</select>
     </div>
     <div class="form-group">
+        <label for="title">称号（可选）</label>
+        <input type="text" id="title" value="${escapeHtml(titleValue)}" placeholder="如 青丝慧剑、勤学苦练">
+        <div class="hint">会保存到 title.js 的 characterTitle 中，支持 #g/#b 等颜色前缀。</div>
+    </div>
+    <div class="form-group">
         <label for="description">介绍</label>
         <textarea id="description" rows="3" placeholder="武将背景介绍">${escapeHtml(descriptionValue)}</textarea>
     </div>
@@ -630,6 +715,7 @@ function getFormHtml(extension, skills, character) {
                 group: document.getElementById("group").value,
                 skills: selectedSkills,
                 description: document.getElementById("description").value.trim(),
+                title: document.getElementById("title").value.trim(),
                 isZhugong: document.getElementById("isZhugong").checked,
                 isBoss: document.getElementById("isBoss").checked,
                 isAiForbidden: document.getElementById("isAiForbidden").checked,

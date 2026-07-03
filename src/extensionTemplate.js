@@ -47,6 +47,7 @@ async function createStandardExtension(workspaceRoot, extensionDirName, info, op
     await writeFile(path.join(extPath, "character", "character.js"), getEmptyObjectJs("characters"));
     await writeFile(path.join(extPath, "character", "skill.js"), getEmptyObjectJs("skills"));
     await writeFile(path.join(extPath, "character", "translate.js"), getEmptyObjectJs("translate"));
+    await writeFile(path.join(extPath, "character", "title.js"), getEmptyObjectJs("characterTitle"));
 
     if (options.includeCard) {
         await writeFile(path.join(extPath, "card", "index.js"), getCardIndexJs(extensionDirName));
@@ -113,12 +114,14 @@ function getCharacterIndexJs(extDirName) {
 import characters from "./character.js";
 import skills from "./skill.js";
 import translates from "./translate.js";
+import characterTitle from "./title.js";
 
 game.import("character", function () {
     return {
         name: "${extDirName}",
         connect: true,
         character: { ...characters },
+        characterTitle: { ...characterTitle },
         skill: { ...skills },
         translate: { ...translates },
     };

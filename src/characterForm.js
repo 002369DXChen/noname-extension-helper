@@ -497,11 +497,6 @@ function getFormHtml(extension, skills, character) {
     const sexOptions = SEXES.map(([value, label]) =>
         `<option value="${value}" ${value === sexValue ? "selected" : ""}>${label}</option>`
     ).join("");
-    const skillOptions = skills.map(s => {
-        const selected = selectedSkills.includes(s.id) ? "selected" : "";
-        return `<option value="${escapeHtml(s.id)}" ${selected}>${escapeHtml(s.name)} (${escapeHtml(s.id)})</option>`;
-    }).join("");
-
     const initialData = isEdit ? JSON.stringify({
         id: character.id,
         displayName: character.displayName,
@@ -599,6 +594,45 @@ function getFormHtml(extension, skills, character) {
             background: var(--vscode-button-secondaryBackground);
             color: var(--vscode-button-secondaryForeground);
         }
+        .skill-picker {
+            display: flex;
+            gap: 12px;
+        }
+        .skill-list-box {
+            flex: 1;
+            border: 1px solid var(--vscode-input-border);
+            background: var(--vscode-input-background);
+            min-height: 140px;
+            display: flex;
+            flex-direction: column;
+        }
+        .skill-list-title {
+            font-size: 12px;
+            padding: 6px 8px;
+            color: var(--vscode-descriptionForeground);
+            border-bottom: 1px solid var(--vscode-input-border);
+            background: var(--vscode-editor-background);
+        }
+        .skill-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 4px 0;
+        }
+        .skill-item {
+            padding: 6px 10px;
+            cursor: pointer;
+            font-size: 13px;
+            user-select: none;
+        }
+        .skill-item:hover {
+            background: var(--vscode-list-hoverBackground);
+        }
+        .skill-empty {
+            padding: 10px;
+            font-size: 12px;
+            color: var(--vscode-descriptionForeground);
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -622,8 +656,17 @@ function getFormHtml(extension, skills, character) {
         <select id="group">${groupOptions}</select>
     </div>
     <div class="form-group">
-        <label for="skills">技能（按住 Ctrl / Cmd 多选）</label>
-        <select id="skills" multiple>${skillOptions}</select>
+        <label>技能</label>
+        <div class="skill-picker">
+            <div class="skill-list-box">
+                <div class="skill-list-title">可选技能（双击添加）</div>
+                <div id="availableSkills" class="skill-list"></div>
+            </div>
+            <div class="skill-list-box">
+                <div class="skill-list-title">已选技能（双击移除）</div>
+                <div id="selectedSkills" class="skill-list"></div>
+            </div>
+        </div>
     </div>
     <div class="form-group">
         <label for="title">称号（可选）</label>
@@ -675,6 +718,45 @@ function getFormHtml(extension, skills, character) {
             });
         }
 
+        // 技能双列表选择逻辑
+        const allSkills = ${JSON.stringify(skills.map(s => ({ id: s.id, name: s.name })))};
+        const initialSelectedIds = initialData ? initialData.skills || [] : [];
+        let selectedSkillIds = [...initialSelectedIds];
+
+        function renderSkillLists() {
+            const availableContainer = document.getElementById("availableSkills");
+            const selectedContainer = document.getElementById("selectedSkills");
+
+            const availableSkills = allSkills.filter(s => !selectedSkillIds.includes(s.id));
+
+            availableContainer.innerHTML = availableSkills.length
+                ? availableSkills.map(s => `<div class="skill-item" data-id="${escapeHtml(s.id)}">${escapeHtml(s.name)} (${escapeHtml(s.id)})</div>`).join("")
+                : '<div class="skill-empty">暂无可选技能</div>';
+
+            selectedContainer.innerHTML = selectedSkillIds.length
+                ? selectedSkillIds.map(id => {
+                    const s = allSkills.find(x => x.id === id);
+                    return `<div class="skill-item" data-id="${escapeHtml(id)}">${escapeHtml(s ? s.name : id)} (${escapeHtml(id)})</div>`;
+                }).join("")
+                : '<div class="skill-empty">双击上方技能添加到此处</div>';
+
+            availableContainer.querySelectorAll(".skill-item").forEach(item => {
+                item.addEventListener("dblclick", () => {
+                    selectedSkillIds.push(item.dataset.id);
+                    renderSkillLists();
+                });
+            });
+
+            selectedContainer.querySelectorAll(".skill-item").forEach(item => {
+                item.addEventListener("dblclick", () => {
+                    selectedSkillIds = selectedSkillIds.filter(id => id !== item.dataset.id);
+                    renderSkillLists();
+                });
+            });
+        }
+
+        renderSkillLists();
+
         document.getElementById("avatar").addEventListener("change", function () {
             const file = this.files[0];
             document.getElementById("avatarName").textContent = file ? file.name : (initialData ? "已有图片，选择新文件可替换" : "未选择文件");
@@ -701,8 +783,8 @@ function getFormHtml(extension, skills, character) {
                 return;
             }
 
-            const skillsSelect = document.getElementById("skills");
-            const selectedSkills = Array.from(skillsSelect.selectedOptions).map(o => o.value);
+            const selectedSkillItems = document.querySelectorAll("#selectedSkills .skill-item");
+            const selectedSkills = Array.from(selectedSkillItems).map(item => item.dataset.id);
 
             const avatarFile = document.getElementById("avatar").files[0];
             const dieAudioFile = document.getElementById("dieAudio").files[0];

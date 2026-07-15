@@ -730,13 +730,13 @@ function getFormHtml(extension, skills, character) {
             const availableSkills = allSkills.filter(s => !selectedSkillIds.includes(s.id));
 
             availableContainer.innerHTML = availableSkills.length
-                ? availableSkills.map(s => `<div class="skill-item" data-id="${escapeHtml(s.id)}">${escapeHtml(s.name)} (${escapeHtml(s.id)})</div>`).join("")
+                ? availableSkills.map(s => \`<div class="skill-item" data-id="${escapeHtml(s.id)}">${escapeHtml(s.name)} (${escapeHtml(s.id)})</div>\`).join("")
                 : '<div class="skill-empty">暂无可选技能</div>';
 
             selectedContainer.innerHTML = selectedSkillIds.length
                 ? selectedSkillIds.map(id => {
                     const s = allSkills.find(x => x.id === id);
-                    return `<div class="skill-item" data-id="${escapeHtml(id)}">${escapeHtml(s ? s.name : id)} (${escapeHtml(id)})</div>`;
+                    return \`<div class="skill-item" data-id="${escapeHtml(id)}">${escapeHtml(s ? s.name : id)} (${escapeHtml(id)})</div>\`;
                 }).join("")
                 : '<div class="skill-empty">双击上方技能添加到此处</div>';
 

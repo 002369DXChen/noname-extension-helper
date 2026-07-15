@@ -60,6 +60,10 @@ code --extensionDevelopmentPath=. ..
 
 ## 更新日志
 
+### v0.1.3
+
+- 修复：`src/characterForm.js` 中 Webview HTML 模板内嵌的 JavaScript 代码使用了未转义的反引号，导致扩展激活时报 `Unexpected token 'class'` 语法错误，侧边栏提示“没有可提供视图数据的已注册数据提供程序”。
+
 ### v0.1.2
 
 - 修复：为所有命令补充 `onCommand` 激活事件，解决从 VSIX 安装后命令未找到的问题。

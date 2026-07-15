@@ -60,6 +60,10 @@ code --extensionDevelopmentPath=. ..
 
 ## 更新日志
 
+### v0.1.4
+
+- 修复：武将表单 Webview 中，内层模板字面量的 `${}` 被外层模板错误求值，导致 `s is not defined`；同时为 Webview 注入 `escapeHtml` 函数，避免客户端报 `escapeHtml is not defined`。
+
 ### v0.1.3
 
 - 修复：`src/characterForm.js` 中 Webview HTML 模板内嵌的 JavaScript 代码使用了未转义的反引号，导致扩展激活时报 `Unexpected token 'class'` 语法错误，侧边栏提示“没有可提供视图数据的已注册数据提供程序”。

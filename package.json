@@ -2,7 +2,7 @@
   "name": "noname-extension-helper",
   "displayName": "无名杀扩展助手",
   "description": "在 VS Code 中管理无名杀 ES Module 扩展的武将、技能和卡牌",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "publisher": "002369DXChen",
   "license": "GPL-3.0-only",
   "repository": {
@@ -24,7 +24,18 @@
     "onView:nonameExtensions",
     "workspaceContains:extension/*/extension.js",
     "workspaceContains:extension/*/main/precontent.js",
-    "onCommand:nonameExtensionHelper.refresh"
+    "onCommand:nonameExtensionHelper.refresh",
+    "onCommand:nonameExtensionHelper.openFileAt",
+    "onCommand:nonameExtensionHelper.openExtensionFolder",
+    "onCommand:nonameExtensionHelper.exportExtension",
+    "onCommand:nonameExtensionHelper.createCharacter",
+    "onCommand:nonameExtensionHelper.createExtension",
+    "onCommand:nonameExtensionHelper.createCharacterForm",
+    "onCommand:nonameExtensionHelper.createSkill",
+    "onCommand:nonameExtensionHelper.createSkillForCharacter",
+    "onCommand:nonameExtensionHelper.editItem",
+    "onCommand:nonameExtensionHelper.editCharacterForm",
+    "onCommand:nonameExtensionHelper.deleteSkill"
   ],
   "main": "./extension.js",
   "contributes": {

@@ -2,7 +2,7 @@
   "name": "noname-extension-helper",
   "displayName": "无名杀扩展助手",
   "description": "在 VS Code 中管理无名杀 ES Module 扩展的武将、技能和卡牌",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "publisher": "002369DXChen",
   "license": "GPL-3.0-only",
   "repository": {

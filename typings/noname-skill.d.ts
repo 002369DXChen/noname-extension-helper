@@ -3119,7 +3119,19 @@ declare interface Card {
     destroyed?: boolean;
     original?: string;
     vcard?: VCard;
+    cards?: Card[];
     hasGaintag(tag: string): boolean;
+    hasNature(nature: string, player?: Player): boolean;
+    addGaintag(gaintag: string | string[]): void;
+    removeGaintag(tag?: string | true): void;
+    addNature(nature: string): void;
+    removeNature(nature: string): void;
+    init(card: [string, string, number | string, string?] | Card | VCard): void;
+    copy(): Card;
+    clone(): Card;
+    destroy(): void;
+    selfDestroy(event?: GameEvent): void;
+    willBeDestroyed(targetPosition: string, player?: Player, event?: GameEvent): boolean;
     [key: string]: any;
 }
 
@@ -3139,8 +3151,21 @@ declare interface Player {
     isDead(): boolean;
     isDying(): boolean;
     isDamaged(): boolean;
+    isHealthy(): boolean;
     isTurnedOver(): boolean;
     isLinked(): boolean;
+    isMaxHp(only?: boolean, raw?: boolean, filter?: (player: Player) => boolean): boolean;
+    isMinHp(only?: boolean, raw?: boolean, filter?: (player: Player) => boolean): boolean;
+    isMaxMaxHp(only?: boolean, filter?: (player: Player) => boolean): boolean;
+    isMinMaxHp(only?: boolean, filter?: (player: Player) => boolean): boolean;
+    isMaxCard(only?: boolean, filter?: (player: Player) => boolean): boolean;
+    isMinCard(only?: boolean, filter?: (player: Player) => boolean): boolean;
+    isMaxHandcard(only?: boolean, filter?: (player: Player) => boolean): boolean;
+    isMinHandcard(only?: boolean, filter?: (player: Player) => boolean): boolean;
+    isMaxEquip(only?: boolean, filter?: (player: Player) => boolean): boolean;
+    isMinEquip(only?: boolean, filter?: (player: Player) => boolean): boolean;
+    getHp(raw?: boolean): number;
+    getDamagedHp(raw?: boolean): number;
     hasCard(filter?: string | ((card: Card) => boolean), position?: string): boolean;
     hasCards(position?: string, filter?: string | ((card: Card) => boolean)): boolean;
     hasUseTarget(card: Card | string, distance?: boolean, includecard?: boolean): boolean;
@@ -3154,6 +3179,7 @@ declare interface Player {
     getCards(position?: string, filter?: string | ((card: Card) => boolean)): Card[];
     getGainableCards(player: Player, position?: string, filter?: string | ((card: Card) => boolean)): Card[];
     getDiscardableCards(player: Player, position?: string, filter?: string | ((card: Card) => boolean)): Card[];
+    getCardIndex(position: string, name: string, card: Card, max?: number): number;
 
     // 基础操作
     draw(num?: number): Promise<GameEvent>;
@@ -3204,6 +3230,7 @@ declare interface Player {
     removeSkill(skill: string | string[]): void;
     hasSkill(skill: string, arg2?: any, arg3?: any, arg4?: any): boolean;
     hasUsableSkill(skill: string): boolean;
+    canRespond(event: GameEvent, card?: Card | string, type?: string): boolean;
     logSkill(skill: string, targets?: Player | Player[], nature?: string, logv?: any, args?: any): void;
     line(target: Player | Player[], config?: any): void;
 
@@ -3251,6 +3278,83 @@ declare interface Player {
     getEquips(subtype?: string): Card[];
     getHandcardNum(): number;
 
+    // 名称
+    getName(forDialog?: boolean): string;
+    getName1(): string;
+    getName2(): string;
+
+    // 存储
+    setStorage(name: string, value: any, mark?: boolean): any;
+    getStorage(name: string, defaultValue?: any): any;
+    hasStorage(name: string, value?: any): boolean;
+    hasStorageAny(name: string, ...values: any[]): boolean;
+    hasStorageAll(name: string, ...values: any[]): boolean;
+    initStorage(name: string, value: any, mark?: boolean): any;
+    updateStorage(name: string, operation: (value: any) => any, mark?: boolean): any;
+    updateStorageAsync(name: string, operation: (value: any) => any | Promise<any>, mark?: boolean): Promise<any>;
+    removeStorage(name: string, mark?: boolean): boolean;
+
+    // 武将牌上（扩展区）的牌
+    getExpansions(tag: string): Card[];
+    countExpansions(tag: string): number;
+    hasExpansions(tag: string): boolean;
+
+    // 装备/判定栏
+    hasEquip(slot: string): boolean;
+    getVEquip(name: string | number): VCard | null;
+    getVEquips(subtype?: string | number | Card | VCard): VCard[];
+    hasVCard(name: string | ((vcard: VCard) => boolean), position: string): boolean;
+    hasEmptySlot(type: string | number): boolean;
+    countEmptySlot(type: string | number): number;
+    hasEquipableSlot(type: string | number): boolean;
+    countEquipableSlot(type: string | number): number;
+    hasEnabledSlot(type: string | number): boolean;
+    countEnabledSlot(type: string | number): number;
+    hasDisabledSlot(type: string | number): boolean;
+    countDisabledSlot(type: string | number): number;
+    disableEquip(params: any): Promise<GameEvent>;
+    enableEquip(params: any): Promise<GameEvent>;
+    expandEquip(params: any): Promise<GameEvent>;
+    isDisabledJudge(): boolean;
+
+    // 特殊操作
+    chooseToCompare(target: Player, prompt?: string): Promise<GameEvent>;
+    chooseToPSS(prompt?: string): Promise<GameEvent>;
+    gift(cards: Card | Card[], target: Player): Promise<GameEvent>;
+    canGift(card: Card, target: Player, strict?: boolean): boolean;
+    refuseGifts(card: Card, player: Player): boolean;
+    getGiftEffect(card: Card, target: Player): number;
+    getGiftAIResultTarget(card: Card, target: Player): number;
+    recast(cards: Card | Card[], recastingLose?: any, recastingGain?: any): Promise<GameEvent>;
+    canRecast(card: Card, source?: Player, strict?: boolean): boolean;
+    executeDelayCardEffect(card: Card | string, target?: Player, judge?: (card: Card) => number, judge2?: (result: Result) => boolean): Promise<GameEvent>;
+    addShownCards(cards: Card | Card[], gaintag?: string | string[]): Promise<GameEvent>;
+    hideShownCards(cards: Card | Card[], gaintag?: string | string[]): Promise<GameEvent>;
+    getShownCards(gaintag?: string): Card[];
+    countShownCards(gaintag?: string): number;
+    hasShownCards(gaintag?: string): boolean;
+    getKnownCards(other: Player, filter?: string | ((card: Card) => boolean)): Card[];
+    isAllCardsKnown(other: Player): boolean;
+    hasKnownCards(other: Player, filter?: string | ((card: Card) => boolean)): boolean;
+    countKnownCards(other: Player, filter?: string | ((card: Card) => boolean)): number;
+    connectCards(cards: Card | Card[], source?: Player, log?: boolean): Promise<GameEvent>;
+    resetConnectedCards(cards: Card | Card[], source?: Player, log?: boolean): Promise<GameEvent>;
+    getConnectedCards(): Card[];
+    countConnectedCards(): number;
+    hasConnectedCards(): boolean;
+    addZhanfa(id: string): void;
+    removeZhanfa(id: string): void;
+    hasZhanfa(id: string): boolean;
+    addTip(index: string, message: string, isTemp?: boolean, css?: Record<string, string>): void;
+    removeTip(index?: string): void;
+    changeFury(amount: number, limit?: boolean): void;
+    sortHandcard(sort?: string | ((cardA: Card, cardB: Card) => number)): void;
+    sortHandcardOL(sort?: string | ((cardA: Card, cardB: Card) => number)): void;
+    clearSkills(): void;
+    hasHiddenSkill(skill: string): boolean;
+    hasBannedSkill(skill: string): boolean;
+    awakenSkill(skill: string): void;
+
     // 链式技能
     when(signal: string | string[], instantlyAdd?: boolean): When;
 
@@ -3297,7 +3401,7 @@ declare interface Get {
     tag(card: Card | VCard, tag: string): boolean | number;
     value(card: Card | Card[], player?: Player): number;
     useful(card: Card, player?: Player): number;
-    translation(target: string | Card | Player | VCard): string;
+    translation(target: string | Card | Player | VCard, ...args: any[]): string;
     mode(): string;
     itemtype(target: any): string;
     is: {
@@ -3320,6 +3424,16 @@ declare interface Get {
     playerCardFilter(player: Player, position: string): boolean;
     info(skill: string): Skill;
     copy(skill: string): Skill;
+    skill(skill: string): Skill;
+    type(card: Card | VCard): string;
+    type2(card: Card | VCard): string;
+    subtype(card: Card | VCard, only?: boolean): string;
+    rawName(str: string): string;
+    groupnature(group: string, method?: string): string;
+    numOf(arr: any[], item: any): number;
+    strNumber(num: number | string, nature?: string): string;
+    yingbianEffect(card: Card): string;
+    yingbianLevel(card: Card): number;
     event(): GameEvent;
     player(): Player;
     target(): Player;
@@ -3328,14 +3442,18 @@ declare interface Get {
     cards(): Card[];
     effect(target: Player, card: Card | VCard | string, player: Player, viewer?: Player): number;
     damageEffect(target: Player, source: Player | null, player: Player, nature?: string): number;
+    config(key: string, defaultValue?: any): any;
     [key: string]: any;
 }
 
 declare interface Library {
     filter: LibFilter;
     skill: Record<string, Skill>;
+    card: Record<string, any>;
     translate: Record<string, string>;
     config: Record<string, any>;
+    onresize: (() => void)[];
+    onover: ((result: any) => void)[];
     [key: string]: any;
 }
 
@@ -3347,8 +3465,11 @@ declare interface Game {
     online: boolean;
     connectMode: boolean;
     log(...args: any[]): void;
+    print(...args: any[]): void;
     delay(seconds?: number): Promise<GameEvent>;
+    delayx(): Promise<GameEvent>;
     asyncDelay(seconds?: number): Promise<GameEvent>;
+    asyncDelayx(): Promise<GameEvent>;
     broadcastAll(func: () => void): void;
     broadcast(func: (...args: any[]) => void, ...args: any[]): void;
     hasPlayer(filter: (player: Player) => boolean, includeOut?: boolean): boolean;
@@ -3361,10 +3482,19 @@ declare interface Game {
     uncheck(): void;
     pause(): void;
     resume(): void;
+    over(bool?: boolean): void;
+    restart(): void;
+    reload(): void;
     addGlobalSkill(skill: string): void;
     removeGlobalSkill(skill: string): void;
     trySkillAudio(skill: string, player: Player, direct?: boolean): void;
     logSkill(skill: string, player: Player, targets?: Player | Player[], nature?: string): void;
+    saveConfig(key: string, value?: any): void;
+    loadConfig(key?: string, defaultValue?: any): any;
+    addVideo(type: string, player?: Player, info?: any): void;
+    playVideo(): void;
+    asyncWait(): Promise<void>;
+    waitForPlayer(): void;
     [key: string]: any;
 }
 

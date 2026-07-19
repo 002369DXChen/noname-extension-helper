@@ -3086,7 +3086,7 @@ interface ChooseButtonConfigData {
 
 declare interface GameEvent {
     name: string;
-    player?: Player;
+    player: Player;
     target?: Player;
     targets?: Player[];
     source?: Player;

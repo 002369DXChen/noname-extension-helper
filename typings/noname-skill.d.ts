@@ -59,11 +59,8 @@ declare type ContentFuncsByAll = ((event: GameEvent, trigger: GameEvent, player:
 
 declare type OldContentFuncByAll = () => void
 
-declare type Game = any;
-declare type Library = any;
 declare type Status = any;
 declare type UI = any;
-declare type Get = any;
 declare type AI = any;
 
 // Button 类型由下方的简化定义提供
@@ -73,6 +70,7 @@ declare type AI = any;
 // GameEvent 类型由下方的简化定义提供
 // Player 类型由下方的简化定义提供
 // Control 类型由下方的简化定义提供
+// Game / Library / Get 类型由下方的简化定义提供
 
 // Video 类型由下方的简化定义提供
 // Videos 类型由下方的简化定义提供
@@ -3099,11 +3097,14 @@ declare interface GameEvent {
 }
 
 declare interface Result {
-    bool?: boolean;
+    bool: boolean;
     cards?: Card[];
     targets?: Player[];
     links?: any[];
     control?: string;
+    index?: number;
+    skill?: string;
+    cost_data?: any;
     [key: string]: any;
 }
 
@@ -3112,6 +3113,13 @@ declare interface Card {
     suit?: string;
     number?: number | string;
     nature?: string;
+    gaintag?: string[];
+    vanishtag?: string[];
+    storage?: Record<string, any>;
+    destroyed?: boolean;
+    original?: string;
+    vcard?: VCard;
+    hasGaintag(tag: string): boolean;
     [key: string]: any;
 }
 
@@ -3201,6 +3209,29 @@ declare interface Player {
     storage: Record<string, any>;
     setStorage(name: string, value: any): void;
 
+    // 更多选择方法
+    chooseControl(choices: string[], prompt?: string): Promise<GameEvent>;
+    chooseToDiscard(num?: number | [number, number], prompt?: string): Promise<GameEvent>;
+    chooseToGive(target: Player, num?: number | [number, number], prompt?: string): Promise<GameEvent>;
+    chooseToMove(prompt?: string): Promise<GameEvent>;
+    chooseToGuanxing(cards: Card[]): Promise<GameEvent>;
+    chooseDrawRecover(num1?: number, num2?: number): Promise<GameEvent>;
+
+    // 标记与状态
+    addGaintag(cards: Card | Card[], tag: string): void;
+    removeGaintag(tag: string): void;
+    hasJudge(name: string): boolean;
+    getJudge(name: string): Card | undefined;
+    getEquip(slot: string): Card | undefined;
+    getHandcardNum(): number;
+
+    // 链式技能
+    when(signal: string | string[]): When;
+
+    // 其他常用
+    canUseTarget(card: Card, target: Player): boolean;
+    getStat(): Stat;
+
     [key: string]: any;
 }
 
@@ -3217,13 +3248,72 @@ declare interface Control {
 }
 
 declare interface VCard {
+    name: string;
+    suit?: string;
+    number?: number | string;
+    nature?: string;
+    cards?: Card[];
+    isCard?: boolean;
     [key: string]: any;
 }
 
-declare const lib: any;
-declare const game: any;
+declare interface LibFilter {
+    notMe: (card?: Card, player?: Player, target?: Player) => boolean;
+    all: (card?: Card, player?: Player, target?: Player) => boolean;
+    all2: (card?: Card, player?: Player, target?: Player) => boolean;
+    onlyMe: (card?: Card, player?: Player, target?: Player) => boolean;
+    notMeCard: (card?: Card, player?: Player, target?: Player) => boolean;
+    [key: string]: any;
+}
+
+declare interface Get {
+    attitude(player: Player, target: Player): number;
+    tag(card: Card | VCard, tag: string): boolean | number;
+    value(card: Card | Card[], player?: Player): number;
+    useful(card: Card, player?: Player): number;
+    translation(target: string | Card | Player | VCard): string;
+    mode(): string;
+    itemtype(target: any): string;
+    is: {
+        object(target: any): boolean;
+        array(target: any): boolean;
+        [key: string]: any;
+    };
+    suit(card: Card, player?: Player): string;
+    number(card: Card): number | string;
+    name(card: Card): string;
+    color(card: Card): string;
+    owner(card: Card): Player;
+    cardPile(filter: (card: Card) => boolean, position?: string): Card;
+    playerCardFilter(player: Player, position: string): boolean;
+    [key: string]: any;
+}
+
+declare interface Library {
+    filter: LibFilter;
+    skill: Record<string, Skill>;
+    translate: Record<string, string>;
+    config: Record<string, any>;
+    [key: string]: any;
+}
+
+declare interface Game {
+    log(...args: any[]): void;
+    delay(seconds?: number): Promise<GameEvent>;
+    asyncDelay(seconds?: number): Promise<GameEvent>;
+    broadcastAll(func: () => void): void;
+    hasPlayer(filter: (player: Player) => boolean, includeOut?: boolean): boolean;
+    countPlayer(filter: (player: Player) => boolean, includeOut?: boolean): number;
+    filterPlayer(filter: (player: Player) => boolean, includeOut?: boolean): Player[];
+    cardsDiscard(cards: Card | Card[]): Promise<GameEvent>;
+    loseAsync(info: Record<string, any>): Promise<GameEvent>;
+    [key: string]: any;
+}
+
+declare const lib: Library;
+declare const game: Game;
 declare const ui: any;
-declare const get: any;
+declare const get: Get;
 declare const ai: any;
 declare const _status: any;
 

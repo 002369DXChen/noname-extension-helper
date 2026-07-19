@@ -156,6 +156,7 @@ declare interface Player {
     lose(cards: Card | Card[], hs?: boolean, es?: boolean, js?: boolean, ss?: boolean): Promise<GameEvent>;
     lose(params: Record<string, any>): Promise<GameEvent>;
     gain(cards: Card | Card[], log?: boolean): Promise<GameEvent>;
+    gain(cards: Card | Card[], source: Player): Promise<GameEvent>;
     gain(params: Record<string, any>): Promise<GameEvent>;
     damage(...args: any[]): Promise<GameEvent>;
     recover(num?: number): Promise<GameEvent>;
@@ -215,8 +216,7 @@ declare interface Player {
     countMark(skill: string): number;
     addMark(skill: string, num?: number, log?: boolean): void;
     removeMark(skill: string, num?: number, log?: boolean): void;
-    storage: Record<string, any>;
-    setStorage(name: string, value: any, mark?: boolean): void;
+    setStorage(name: string, value: any, mark?: boolean): any;
 
     // 更多选择方法
     chooseControl(choices: string[], prompt?: string): Promise<GameEvent>;
@@ -382,19 +382,19 @@ declare interface Get {
         [key: string]: any;
     };
     select(select: number | [number, number] | (() => number | [number, number])): [number, number];
-    suit(card: Card, player?: Player): string;
-    number(card: Card): number | string;
-    name(card: Card): string;
-    color(card: Card): string;
-    owner(card: Card): Player;
+    suit(card: Card | VCard | undefined, player?: Player): string;
+    number(card: Card | VCard | undefined): number | string;
+    name(card: Card | VCard | undefined): string;
+    color(card: Card | VCard | undefined): string;
+    owner(card: Card | VCard | undefined): Player;
     cardPile(filter: (card: Card) => boolean, position?: string): Card;
     playerCardFilter(player: Player, position: string): boolean;
     info(skill: string): Skill;
     copy(skill: string): Skill;
     skill(skill: string): Skill;
-    type(card: Card | VCard): string;
-    type2(card: Card | VCard): string;
-    subtype(card: Card | VCard, only?: boolean): string;
+    type(card: Card | VCard | undefined): string;
+    type2(card: Card | VCard | undefined): string;
+    subtype(card: Card | VCard | undefined, only?: boolean): string;
     rawName(str: string): string;
     groupnature(group: string, method?: string): string;
     numOf(arr: any[], item: any): number;

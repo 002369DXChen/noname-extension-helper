@@ -4,6 +4,7 @@ const fs = require("fs");
 const { openItemInTextEditor, registerTempFileHandlers } = require("./textEditor");
 const { deleteSkill } = require("./deleter");
 const { openCharacterForm, openCharacterEditor } = require("./characterForm");
+const { openDescriptionForm } = require("./descriptionForm");
 const { createStandardExtension } = require("./extensionTemplate");
 const { exportExtension } = require("./exporter");
 
@@ -218,7 +219,12 @@ function registerCommands(context, provider) {
                 });
                 if (name === undefined) return;
 
-                await insertCharacter(ext, id, name || id);
+                const description = await vscode.window.showInputBox({
+                    prompt: "输入武将描述（可选）",
+                });
+                if (description === undefined) return;
+
+                await insertCharacter(ext, id, name || id, description);
                 provider.refresh();
             }
         )
@@ -248,7 +254,12 @@ function registerCommands(context, provider) {
                 });
                 if (name === undefined) return;
 
-                await insertSkill(ext, id, name || id);
+                const description = await vscode.window.showInputBox({
+                    prompt: "输入技能描述（可选）",
+                });
+                if (description === undefined) return;
+
+                await insertSkill(ext, id, name || id, description);
                 provider.refresh();
             }
         )
@@ -280,7 +291,12 @@ function registerCommands(context, provider) {
                 });
                 if (name === undefined) return;
 
-                await insertSkill(ext, id, name || id);
+                const description = await vscode.window.showInputBox({
+                    prompt: "输入技能描述（可选）",
+                });
+                if (description === undefined) return;
+
+                await insertSkill(ext, id, name || id, description);
                 await addSkillToCharacter(char, id);
                 provider.refresh();
             }
@@ -313,9 +329,21 @@ function registerCommands(context, provider) {
             }
         )
     );
+
+    // 编辑描述（武将/技能/卡牌的 *_info）
+    context.subscriptions.push(
+        vscode.commands.registerCommand(
+            "nonameExtensionHelper.editDescription",
+            async (node) => {
+                const item = node?.character || node?.skill || node?.card;
+                if (!item || !item.extension) return;
+                await openDescriptionForm(context, item, provider);
+            }
+        )
+    );
 }
 
-async function insertCharacter(extension, id, name) {
+async function insertCharacter(extension, id, name, description = "") {
     const characterDir = path.join(extension.path, "character");
     if (!fs.existsSync(characterDir)) {
         await fs.promises.mkdir(characterDir, { recursive: true });
@@ -333,7 +361,7 @@ async function insertCharacter(extension, id, name) {
 
     await appendObjectEntry(characterFile, template, `const characters = {\n};\n\nexport default characters;\n`);
 
-    const translateEntry = `    ${id}: "${name}",\n    ${id}_info: "",\n`;
+    const translateEntry = `    ${id}: "${escapeTranslateString(name)}",\n    ${id}_info: "${escapeTranslateString(description)}",\n`;
     await appendObjectEntry(translateFile, translateEntry, `const translate = {\n};\n\nexport default translate;\n`);
 
     await ensureIndexJs(characterDir);
@@ -342,7 +370,7 @@ async function insertCharacter(extension, id, name) {
     await vscode.window.showTextDocument(doc);
 }
 
-async function insertSkill(extension, id, name) {
+async function insertSkill(extension, id, name, description = "") {
     const characterDir = path.join(extension.path, "character");
     if (!fs.existsSync(characterDir)) {
         await fs.promises.mkdir(characterDir, { recursive: true });
@@ -361,7 +389,7 @@ async function insertSkill(extension, id, name) {
 
     await appendObjectEntry(skillFile, template, `const skills = {\n};\n\nexport default skills;\n`);
 
-    const translateEntry = `    ${id}: "${name}",\n    ${id}_info: "",\n`;
+    const translateEntry = `    ${id}: "${escapeTranslateString(name)}",\n    ${id}_info: "${escapeTranslateString(description)}",\n`;
     await appendObjectEntry(translateFile, translateEntry, `const translate = {\n};\n\nexport default translate;\n`);
 
     await ensureIndexJs(characterDir);
@@ -449,6 +477,14 @@ async function ensureIndexJs(characterDir) {
 
     const content = `import character from "./character.js";\nimport skill from "./skill.js";\nimport translate from "./translate.js";\n\nexport default function () {\n    return {\n        character,\n        skill,\n        translate,\n    };\n}\n`;
     await fs.promises.writeFile(indexFile, content, "utf8");
+}
+
+function escapeTranslateString(value) {
+    return value
+        .replace(/\\/g, "\\\\")
+        .replace(/"/g, '\\"')
+        .replace(/\n/g, "\\n")
+        .replace(/\r/g, "\\r");
 }
 
 module.exports = {

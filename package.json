@@ -2,7 +2,7 @@
   "name": "noname-extension-helper",
   "displayName": "无名杀扩展助手",
   "description": "在 VS Code 中管理无名杀 ES Module 扩展的武将、技能和卡牌",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "publisher": "002369DXChen",
   "license": "GPL-3.0-only",
   "repository": {
@@ -43,6 +43,7 @@
     "onCommand:nonameExtensionHelper.createSkillForCharacter",
     "onCommand:nonameExtensionHelper.editItem",
     "onCommand:nonameExtensionHelper.editCharacterForm",
+    "onCommand:nonameExtensionHelper.editDescription",
     "onCommand:nonameExtensionHelper.deleteSkill"
   ],
   "main": "./extension.js",
@@ -103,6 +104,10 @@
         "title": "编辑武将（表单）"
       },
       {
+        "command": "nonameExtensionHelper.editDescription",
+        "title": "编辑描述"
+      },
+      {
         "command": "nonameExtensionHelper.deleteSkill",
         "title": "删除技能"
       }
@@ -144,6 +149,11 @@
         {
           "command": "nonameExtensionHelper.editCharacterForm",
           "when": "view == nonameExtensions && viewItem == nonameCharacter",
+          "group": "2_edit"
+        },
+        {
+          "command": "nonameExtensionHelper.editDescription",
+          "when": "view == nonameExtensions && (viewItem == nonameCharacter || viewItem == nonameSkill || viewItem == nonameCard)",
           "group": "2_edit"
         },
         {

@@ -3125,23 +3125,58 @@ declare interface Player {
     skills: string[];
     storage: Record<string, any>;
 
-    draw(num?: number): Promise<any>;
-    discard(cards: Card | Card[], delay?: boolean): Promise<any>;
-    lose(cards: Card | Card[], hs?: boolean, es?: boolean, js?: boolean, ss?: boolean): Promise<any>;
-    gain(cards: Card | Card[], log?: boolean): Promise<any>;
-    damage(...args: any[]): Promise<any>;
-    recover(num?: number): Promise<any>;
-    loseHp(num?: number): Promise<any>;
-    gainMaxHp(num?: number): Promise<any>;
-    loseMaxHp(num?: number): Promise<any>;
+    // 状态判断
+    isIn(): boolean;
+    isAlive(): boolean;
+    isDead(): boolean;
+    isDying(): boolean;
+    isTurnedOver(): boolean;
+    isLinked(): boolean;
+    hasCard(filter?: string | ((card: Card) => boolean), position?: string): boolean;
+    hasCards(position?: string): boolean;
+    hasUseTarget(card: Card | string, exclude?: Player): boolean;
+    canUse(card: Card, target?: Player, extra?: any): boolean;
+    hasSkillTag(tag: string, includeOut?: boolean, target?: Player, extra?: any): boolean;
 
+    // 卡牌计数
+    countCards(position?: string): number;
+    countGainableCards(player: Player, position?: string): number;
+    countDiscardableCards(player: Player, position?: string): number;
+    getCards(position?: string): Card[];
+    getGainableCards(player: Player, position?: string): Card[];
+    getDiscardableCards(player: Player, position?: string): Card[];
+
+    // 基础操作
+    draw(num?: number): Promise<GameEvent>;
+    discard(cards: Card | Card[], delay?: boolean): Promise<GameEvent>;
+    lose(cards: Card | Card[], hs?: boolean, es?: boolean, js?: boolean, ss?: boolean): Promise<GameEvent>;
+    gain(cards: Card | Card[], log?: boolean): Promise<GameEvent>;
+    damage(...args: any[]): Promise<GameEvent>;
+    recover(num?: number): Promise<GameEvent>;
+    loseHp(num?: number): Promise<GameEvent>;
+    gainMaxHp(num?: number): Promise<GameEvent>;
+    loseMaxHp(num?: number): Promise<GameEvent>;
+
+    // 选择类
     chooseToUse(hs?: boolean, ns?: boolean): Promise<GameEvent>;
     chooseToRespond(hs?: boolean, ns?: boolean): Promise<GameEvent>;
     chooseCard(hs?: boolean, ns?: boolean, prompt?: string): Promise<GameEvent>;
     chooseTarget(num?: number | [number, number], prompt?: string): Promise<GameEvent>;
     chooseButton(list: any[], forced?: boolean): Promise<GameEvent>;
     chooseBool(prompt?: string): Promise<GameEvent>;
+    choosePlayerCard(target: Player, position?: string, visible?: boolean): Promise<GameEvent>;
+    choosePlayerCard(prompt: string, target: Player, position?: string, visible?: boolean): Promise<GameEvent>;
 
+    // 对他人操作
+    gainPlayerCard(target: Player, position?: string, visible?: boolean): Promise<GameEvent>;
+    gainPlayerCard(prompt: string, target: Player, position?: string, visible?: boolean): Promise<GameEvent>;
+    discardPlayerCard(target: Player, position?: string, visible?: boolean): Promise<GameEvent>;
+    discardPlayerCard(prompt: string, target: Player, position?: string, visible?: boolean): Promise<GameEvent>;
+    loseToDiscardpile(cards: Card | Card[], hp?: boolean, es?: boolean, js?: boolean, ss?: boolean): Promise<GameEvent>;
+    loseToDiscardpile(cards: Card | Card[], position?: any): Promise<GameEvent>;
+    give(cards: Card | Card[], target: Player, visible?: boolean): Promise<GameEvent>;
+
+    // 技能
     addSkill(skill: string | string[]): void;
     removeSkill(skill: string | string[]): void;
     hasSkill(skill: string): boolean;
@@ -3161,6 +3196,10 @@ declare interface Player {
     markSkill(skill: string, info?: any): void;
     unmarkSkill(skill: string): void;
     countMark(skill: string): number;
+    addMark(skill: string, num?: number): void;
+    removeMark(skill: string, num?: number): void;
+    storage: Record<string, any>;
+    setStorage(name: string, value: any): void;
 
     [key: string]: any;
 }

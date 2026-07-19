@@ -92,13 +92,19 @@ async function saveDescription(item, name, description) {
 
 /**
  * 在 translate.js 文本中插入或替换一个键值对
+ * 若存在多个同名键，更新最后出现的一次（JS 对象中最后定义生效）
  */
 function upsertTranslateEntry(content, key, value) {
     const escapedValue = escapeString(value);
-    const keyRegex = new RegExp(`^(\\s*)${escapeRegExp(key)}\\s*:\\s*"[^"]*"\\s*,?\\s*$`, "m");
+    const keyRegex = new RegExp(`(${escapeRegExp(key)}\\s*:\\s*)"[^"]*"(\\s*,?)?`, "g");
 
-    if (keyRegex.test(content)) {
-        return content.replace(keyRegex, `$1${key}: "${escapedValue}",`);
+    const matches = [...content.matchAll(keyRegex)];
+    if (matches.length > 0) {
+        const lastMatch = matches[matches.length - 1];
+        const start = lastMatch.index;
+        const end = start + lastMatch[0].length;
+        const replacement = `${lastMatch[1]}"${escapedValue}"${lastMatch[2] || ""}`;
+        return content.slice(0, start) + replacement + content.slice(end);
     }
 
     const lastBrace = content.lastIndexOf("}");
